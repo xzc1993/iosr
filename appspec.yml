@@ -1,5 +1,8 @@
 version: 0.0
 os: linux
 files:
-  - source: main.py
-    destination: /home/ubuntu
+  - source: /
+    destination: /home/ubuntu/iosr
+hooks:
+  BeforeInstall:
+    - location: rm /home/ubuntu/iosr
