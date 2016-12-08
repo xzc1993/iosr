@@ -1,1 +1,1 @@
-rm /home/ubuntu/iosr
+rm -Rf /home/ubuntu/iosr
