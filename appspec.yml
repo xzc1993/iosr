@@ -5,4 +5,4 @@ files:
     destination: /home/ubuntu/iosr
 hooks:
   BeforeInstall:
-    - location: rm /home/ubuntu/iosr
+    - location: codeDeploy_scripts/BeforeInstall.sh
