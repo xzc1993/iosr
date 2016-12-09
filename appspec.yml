@@ -4,8 +4,6 @@ files:
   - source: /
     destination: /home/ubuntu/iosr
 hooks:
-  ApplicationStop:
-    - location: codeDeploy_scripts/ApplicationStop2.sh
   BeforeInstall:
     - location: codeDeploy_scripts/BeforeInstall.sh
   ApplicationStart:
