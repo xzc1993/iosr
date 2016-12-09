@@ -1,0 +1,1 @@
+python /home/ubuntu/iosr/main.py &
