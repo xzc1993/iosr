@@ -10,10 +10,8 @@ class MainHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        response = yield tornado.gen.Task(tasks.add.apply_async, args=[3])
-        self.write(str(response.result))
-        self.finish()
-        self.write("Hello world ")
+        response = yield tornado.gen.Task(tasks.add.apply_async, args=[3,2])
+        self.write("Hello world {}".format(response.result))
 
 def make_app():
     return tornado.web.Application([
