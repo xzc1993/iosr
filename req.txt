@@ -1,1 +1,3 @@
 tornado==4.4.2
+celery==4.0.1
+tornado-celery==0.3.5
