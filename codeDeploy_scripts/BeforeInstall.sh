@@ -1,3 +1,3 @@
-pip install -r req.txt
-rm -Rf /home/ubuntu/iosr
+sudo pip install -r req.txt
+sudo rm -Rf /home/ubuntu/iosr
 
