@@ -1,1 +1,1 @@
-python /home/ubuntu/iosr/main.py &
+sudo python /home/ubuntu/iosr/main.py &
