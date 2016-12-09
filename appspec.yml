@@ -8,5 +8,7 @@ hooks:
     - location: codeDeploy_scripts/ApplicationStop.sh
   BeforeInstall:
     - location: codeDeploy_scripts/BeforeInstall.sh
+  AfterInstall:
+    - location: codeDeploy_scripts/AfterInstall.sh
   ApplicationStart:
     - location: codeDeploy_scripts/ApplicationStart.sh
