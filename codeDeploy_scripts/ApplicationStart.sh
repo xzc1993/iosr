@@ -1,1 +1,1 @@
-sudo python /home/ubuntu/iosr/main.py &
+sudo python /home/ubuntu/iosr/main.py > /home/ubuntu/iosr/launch.log 2>&1 &
