@@ -7,11 +7,16 @@ import tcelery
 tcelery.setup_nonblocking_producer()
 
 class MainHandler(tornado.web.RequestHandler):
+
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
-        response = yield tornado.gen.Task(tasks.add.apply_async, args=[3,2])
-        self.write("Hello world {}".format(response.result))
+        print 'Executing task'
+        result = tasks.add.apply_async([4, 5])
+        message = "Hello world {}".format(result.get(timeout=10))
+        print (message)
+        self.write(message)
+        self.finish()
 
 def make_app():
     return tornado.web.Application([
