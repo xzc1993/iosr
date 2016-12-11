@@ -9,7 +9,10 @@ app = Celery('tasks',
 
 @app.task
 def add(x, y):
-    client = MongoClient("mongodb://mongo-1541864808.eu-west-1.elb.amazonaws.com:27017")
+    client = MongoClient([
+        'ec2-54-154-102-56.eu-west-1.compute.amazonaws.com',
+        'ec2-54-154-102-56.eu-west-1.compute.amazonaws.com']
+    )
     db = client.primer
     coll = db.log
     coll.insert_one({
@@ -18,5 +21,3 @@ def add(x, y):
         'timestamp' : datetime.utcnow()
     })
     return x + y + 1000
-
-
