@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+        <!-- Bootstrap core CSS -->
+    <link href="/static/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <script src="/static/jquery/jquery-3.1.1.js"></script>
+    <title>IOSR - AWS Demo App - Krzysztof Zieba, Mateusz Ziebura, Maksymilian Gasztych</title>
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar navbar-default">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#">IOSR - AWS Demo App - Krzysztof Zieba, Mateusz Ziebura, Maksymilian Gasztych</a>
+                </div>
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        {% if current_user %}
+                            <a href="/logout">{{ current_user }} - Log out</a>
+                        {% else %}
+                            <a href="/login">Log In</a>
+                        {% end %}
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="jumbotron">
+            {% block content %}
+            {% end %}
+        </div>
+    </div>
+</body>
+</html>
