@@ -4,6 +4,7 @@ import tornado.ioloop
 import tornado.web
 import tornado.gen
 import tasks
+import json
 
 class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
@@ -38,14 +39,35 @@ class MainHandler(BaseHandler):
     @tornado.gen.coroutine
     @tornado.web.authenticated
     def get(self):
-        self.render( os.path.join( os.path.dirname(__file__), 'templates/index.html'))
+        self.render( os.path.join( os.path.dirname(__file__), 'templates/index.html'), filters=self.__getFilters())
 
     @tornado.web.authenticated
     def post(self):
+        filters = json.loads(self.get_argument("selectedFilters"))
         fileinfo = self.request.files['filearg'][0]
-        self.write(base64.b64encode(tasks.contour(fileinfo['body'])))
-        self.add_header('Content-Type', 'image/png')
+        data = base64.b64encode(self.__processRequest(fileinfo['body'], filters))
+        self.write(data)
+        self.add_header('Content-Type', 'image/png,base64')
         self.finish()
+
+    def __processRequest(self, imageData, filters):
+        filters = self.__clearFilters(filters)
+        for filter in filters:
+            imageData = getattr(tasks, filter['filterName'])(imageData, **(filter.get('args', {})))
+        return imageData
+
+    def __clearFilters(self, filters):
+        clearedFilters = list()
+        for filter in filters:
+            if 'filterName' in filter:
+                del filter['$$hashKey']
+                clearedFilters.append(filter)
+        return clearedFilters
+
+
+
+    def __getFilters(self):
+        return tasks.filters.values()
 
 def make_app():
     settings = {
@@ -54,6 +76,7 @@ def make_app():
         "login_url": "/login",
         "xsrf_cookies": True,
         "debug": True,
+        "autoreload": False,
     }
     return tornado.web.Application([
         (r"/", MainHandler),

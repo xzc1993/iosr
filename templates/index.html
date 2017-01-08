@@ -1,3 +1,4 @@
+{% autoescape None %}
 {% extends 'base.html' %}
 {% block script %}
 <script>
@@ -6,26 +7,53 @@
         return r ? r[1] : undefined;
     }
 
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                $('#blah')
+                    .attr('src', e.target.result);
+            };
+
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
     var app = angular.module('myApp', []);
     app.controller('myCtrl', function($scope, $http) {
         $scope.file = null;
         $scope.selectedFilters = [];
-        $scope.selectables = [
-            'takeCPU',
-            'convertToGreyscale',
-            'blur',
-            'contour'
-        ];
+        $scope.selectables = {{ filters }};
         $scope.removeFilter = function(filter){
             var index = $scope.selectedFilters.indexOf(filter);
             if( index != -1){
                 $scope.selectedFilters.splice(index, 1);
             }
         }
+        $scope.findArguments = function(filterId){
+            for(var idx in  $scope.selectables){
+                var item = $scope.selectables[idx];
+                if( item.id == filterId)
+                    return item.args;
+            }
+            return [];
+        }
+        $scope.loadDefault = function(selectedFilter){
+            selectedFilter.args = {};
+            var argumentData = $scope.findArguments(selectedFilter.filterName);
+            for(var idx in argumentData){
+                var item = argumentData[idx];
+                selectedFilter.args[item.name] = item.default;
+            }
+        }
         $scope.sendData = function(){
+            var myEl = angular.element(document.querySelector('#imagePreview'));
+            myEl.addClass('loading');
             $http({
                 method: 'POST',
                 url: '/',
+                cache: false,
                 data : {
                     filearg: $scope.file,
                     selectedFilters: JSON.stringify($scope.selectedFilters),
@@ -42,12 +70,17 @@
                     return formData;
                 }
             })
-            .then(function (data) {
+            .then(
+            function (data) {
                 var myEl = angular.element(document.querySelector('#imagePreview'));
                 myEl.attr('src', 'data:image/png;base64,' + data.data);
+                myEl.removeClass('loading');
+            },
+            function (data) {
+                alert("Error has occured");
             });
-            $scope.console = console;
         }
+        $scope.console = console;
     });
     app.directive('file', function () {
         return {
@@ -59,6 +92,12 @@
                     var file = event.target.files[0];
                     scope.file = file ? file : undefined;
                     scope.$apply();
+                    var reader = new FileReader();
+                    reader.onload = function(event) {
+                        var myEl = angular.element(document.querySelector('#imagePreview'));
+                        myEl.attr('src', event.target.result);
+                    }
+                    reader.readAsDataURL(event.target.files[0]);
                 });
             }
         };
@@ -67,17 +106,38 @@
 {% end %}
 {% block content %}
 <div ng-app="myApp" ng-controller="myCtrl">
-    <img id="imagePreview" style="width:100%;"/>
-    <input type="file" file="file" required />
+    <h2>Preview</h2>
+    <img id="imagePreview" alt="No image selected" style="width:100%;"/>
+    <hr/>
+    <label>Select image</label>
+    <input class="btn btn-secondary" type="file" file="file" accept="image/*" required />
+    <hr/>
     <div ng-repeat = "selectedFilter in selectedFilters">
-        <select ng-model="selectedFilter.filterName">
-            <option ng-repeat = "selectable in selectables" value="{{!selectable}}" >{{!selectable}}</option>
-        </select>
-        <button ng-click="removeFilter(selectedFilter)">Delete</button>
+        <form>
+            <div class="form-group">
+                <label>Select filter</label>
+                <select class="form-control" ng-model="selectedFilter.filterName" ng-change="loadDefault(selectedFilter)">
+                    <option ng-repeat = "selectable in selectables" value="{{!selectable.id}}" >{{!selectable.id}}</option>
+                </select>
+            </div>
+            <div class="form-group" ng-repeat = "arg in findArguments(selectedFilter.filterName)">
+                <label ng-show="arg.label">{{!arg.label}}</label>
+                <input class="form-control" type="{{!arg.type}}" ng-model="selectedFilter.args[arg.name]" value="{{!arg.default}}" />
+            </div>
+            <div style="height:34px">
+                 <div class="btn-group pull-right" >
+                    <button class="btn btn-danger" ng-click="removeFilter(selectedFilter)">Delete</button>
+                </div>
+            </div>
+
+        </form>
+        <hr/>
     </div>
-    <button ng-click = "selectedFilters.push({})">Add next filter</button>
-    <button ng-click = "console.log(file, selectedFilters)">Debug</button>
-    <button ng-click = "sendData()">Ok</button>
+    <div class="btn-group pull-right">
+        <button class="btn btn-primary " ng-click = "selectedFilters.push({'args':{}})">Add next filter</button>
+        <!--<button ng-click = "console.log(file, selectedFilters)">Debug</button>-->
+        <button class="btn btn-primary " ng-click = "sendData()">Process</button>
+    </div>
 </div>
 
 </body>

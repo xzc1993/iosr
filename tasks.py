@@ -1,10 +1,12 @@
 import datetime
+import time
 import StringIO
 
 from celery import Celery
 from PIL import Image
 from PIL import ImageFilter
 from pymongo import MongoClient
+from functools import wraps
 
 app = Celery('tasks',
      backend='amqp://kotek:kotek@rabbitmq-1321755515.eu-west-1.elb.amazonaws.com//',
@@ -17,6 +19,26 @@ client = MongoClient(
     # 'ec2-54-154-102-29.eu-west-1.compute.amazonaws.com']
 )
 
+filters = {
+    'takeCPU' : {
+        'id' : 'takeCPU',
+        'args': [{
+            'name': 'period',
+            'type': 'number',
+            'label': 'Period [s]:',
+            'default': 10,
+        }]
+    },
+    'rotate': {
+        'id': 'rotate',
+        'args': [{
+            'name': 'angle',
+            'type': 'number',
+            'label': 'Angle:',
+            'default': 45,
+        }]
+    }
+}
 
 @app.task
 def add(x, y):
@@ -29,8 +51,12 @@ def add(x, y):
     })
     return x + y + 1000
 
-
 def remoteImageConverter(fn):
+    if fn.__name__ not in filters:
+        filters[fn.__name__] = {
+            "id": fn.__name__
+        }
+    @wraps(fn)
     def wrappedConverter(imageData, *args, **kwars):
         buff = StringIO.StringIO(imageData)
         buff.seek(0)
@@ -54,11 +80,18 @@ def logToDatabase(operationName):
     })
 
 @app.task
-def takeCPU(time):
+@remoteImageConverter
+def takeCPU(image, period=10):
     start = time.time()
-    while start + time > time.time():
+    while start + period > time.time():
         x = (1+3)/5
-    return x
+    return image
+
+
+@app.task
+@remoteImageConverter
+def rotate(image, angle):
+    return image.rotate(angle)
 
 
 @app.task
@@ -71,6 +104,7 @@ def convertToGreyscale(image):
 @remoteImageConverter
 def blur(image):
     return image.filter(ImageFilter.BLUR)
+
 
 @app.task
 @remoteImageConverter
