@@ -1,5 +1,5 @@
 import os
-import StringIO
+import base64
 import tornado.ioloop
 import tornado.web
 import tornado.gen
@@ -43,7 +43,7 @@ class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def post(self):
         fileinfo = self.request.files['filearg'][0]
-        self.write(tasks.blur(fileinfo['body']))
+        self.write(base64.b64encode(tasks.contour(fileinfo['body'])))
         self.add_header('Content-Type', 'image/png')
         self.finish()
 
@@ -53,6 +53,7 @@ def make_app():
         "cookie_secret": "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
         "login_url": "/login",
         "xsrf_cookies": True,
+        "debug": True,
     }
     return tornado.web.Application([
         (r"/", MainHandler),
@@ -62,5 +63,5 @@ def make_app():
 
 if __name__ == "__main__":
     app = make_app()
-    app.listen(8000)
+    app.listen(80)
     tornado.ioloop.IOLoop.current().start()

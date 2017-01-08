@@ -72,7 +72,10 @@ def convertToGreyscale(image):
 def blur(image):
     return image.filter(ImageFilter.BLUR)
 
-
+@app.task
+@remoteImageConverter
+def contour(image):
+    return image.filter(ImageFilter.CONTOUR)
 
 
 

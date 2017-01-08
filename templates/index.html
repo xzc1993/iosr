@@ -1,8 +1,85 @@
 {% extends 'base.html' %}
+{% block script %}
+<script>
+    function getCookie(name) {
+        var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
+        return r ? r[1] : undefined;
+    }
+
+    var app = angular.module('myApp', []);
+    app.controller('myCtrl', function($scope, $http) {
+        $scope.file = null;
+        $scope.selectedFilters = [];
+        $scope.selectables = [
+            'takeCPU',
+            'convertToGreyscale',
+            'blur',
+            'contour'
+        ];
+        $scope.removeFilter = function(filter){
+            var index = $scope.selectedFilters.indexOf(filter);
+            if( index != -1){
+                $scope.selectedFilters.splice(index, 1);
+            }
+        }
+        $scope.sendData = function(){
+            $http({
+                method: 'POST',
+                url: '/',
+                data : {
+                    filearg: $scope.file,
+                    selectedFilters: JSON.stringify($scope.selectedFilters),
+                },
+                headers: {
+                    'X-XSRFToken' : getCookie("_xsrf"),
+                    'Content-Type': undefined,
+                },
+                transformRequest: function (data, headersGetter) {
+                    var formData = new FormData();
+                    angular.forEach(data, function (value, key) {
+                        formData.append(key, value);
+                    });
+                    return formData;
+                }
+            })
+            .then(function (data) {
+                var myEl = angular.element(document.querySelector('#imagePreview'));
+                myEl.attr('src', 'data:image/png;base64,' + data.data);
+            });
+            $scope.console = console;
+        }
+    });
+    app.directive('file', function () {
+        return {
+            scope: {
+                file: '='
+            },
+            link: function (scope, el, attrs) {
+                el.bind('change', function (event) {
+                    var file = event.target.files[0];
+                    scope.file = file ? file : undefined;
+                    scope.$apply();
+                });
+            }
+        };
+    });
+</script>
+{% end %}
 {% block content %}
-<form enctype="multipart/form-data" method="post" action="/">
-    {% module xsrf_form_html() %}
-    <input type="file" name="filearg"></br>
-    <input type="submit" value="Submit">
-</form>
+<div ng-app="myApp" ng-controller="myCtrl">
+    <img id="imagePreview" style="width:100%;"/>
+    <input type="file" file="file" required />
+    <div ng-repeat = "selectedFilter in selectedFilters">
+        <select ng-model="selectedFilter.filterName">
+            <option ng-repeat = "selectable in selectables" value="{{!selectable}}" >{{!selectable}}</option>
+        </select>
+        <button ng-click="removeFilter(selectedFilter)">Delete</button>
+    </div>
+    <button ng-click = "selectedFilters.push({})">Add next filter</button>
+    <button ng-click = "console.log(file, selectedFilters)">Debug</button>
+    <button ng-click = "sendData()">Ok</button>
+</div>
+
+</body>
+</html>
 {% end %}
