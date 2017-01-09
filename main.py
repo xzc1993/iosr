@@ -64,8 +64,6 @@ class MainHandler(BaseHandler):
                 clearedFilters.append(filter)
         return clearedFilters
 
-
-
     def __getFilters(self):
         return tasks.filters.values()
 
