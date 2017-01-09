@@ -13,11 +13,11 @@ app = Celery('tasks',
      broker='amqp://kotek:kotek@rabbitmq-1321755515.eu-west-1.elb.amazonaws.com//'
 )
 
-client = MongoClient(
-    # 'ec2-54-154-102-56.eu-west-1.compute.amazonaws.com',
-    # 'ec2-54-171-39-125.eu-west-1.compute.amazonaws.com',
-    # 'ec2-54-154-102-29.eu-west-1.compute.amazonaws.com']
-)
+client = MongoClient([
+     'ec2-54-154-185-177.eu-west-1.compute.amazonaws.com',
+     'ec2-54-171-78-179.eu-west-1.compute.amazonaws.com',
+     'ec2-54-229-174-78.eu-west-1.compute.amazonaws.com'
+])
 
 filters = {
     'takeCPU' : {
