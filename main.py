@@ -74,8 +74,6 @@ class MainHandler(BaseHandler):
         tornado.ioloop.IOLoop.instance().call_later(1, wait_for_result_inner)
         return future
 
-
-
     def __clearFilters(self, filters):
         clearedFilters = list()
         for filter in filters:
