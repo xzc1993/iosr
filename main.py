@@ -5,6 +5,8 @@ import tornado.web
 import tornado.gen
 import tasks
 import json
+import concurrent.futures
+import datetime
 
 class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
@@ -41,20 +43,38 @@ class MainHandler(BaseHandler):
     def get(self):
         self.render( os.path.join( os.path.dirname(__file__), 'templates/index.html'), filters=self.__getFilters())
 
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
     @tornado.web.authenticated
     def post(self):
         filters = json.loads(self.get_argument("selectedFilters"))
         fileinfo = self.request.files['filearg'][0]
-        data = base64.b64encode(self.__processRequest(fileinfo['body'], filters))
+        rawData = yield self.__processRequest(fileinfo['body'], filters)
+        data = base64.b64encode(rawData)
         self.write(data)
         self.add_header('Content-Type', 'image/png,base64')
         self.finish()
 
+    @tornado.gen.coroutine
     def __processRequest(self, imageData, filters):
         filters = self.__clearFilters(filters)
         for filter in filters:
-            imageData = getattr(tasks, filter['filterName'])(imageData, **(filter.get('args', {})))
-        return imageData
+            imageDataTask = getattr(tasks, filter['filterName']).delay(imageData, **(filter.get('args', {})))
+            imageData = yield self.wait_for_result(imageDataTask)
+        raise tornado.gen.Return(imageData)
+
+    def wait_for_result(self, task):
+        future = concurrent.futures.Future()
+        def wait_for_result_inner():
+            print task, task.ready()
+            if task.ready():
+                future.set_result(task.result)
+            else:
+                tornado.ioloop.IOLoop.instance().call_later(1, wait_for_result_inner)
+        tornado.ioloop.IOLoop.instance().call_later(1, wait_for_result_inner)
+        return future
+
+
 
     def __clearFilters(self, filters):
         clearedFilters = list()
